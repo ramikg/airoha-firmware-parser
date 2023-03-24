@@ -1,0 +1,129 @@
+enum <byte> COMPRESSION_TYPE
+{
+    NONE = 0,
+    LZMA = 1,
+    LZMA_AES = 2
+};
+
+enum <byte> INTEGRITY_CHECK_TYPE
+{
+    CRC_32 = 0,
+    SHA256 = 1,
+    SHA256_RSA = 2
+};
+
+enum <uint16> TLV_TYPE
+{
+    BASIC_INFO = 0x11,
+    MOVER_INFO = 0x12,
+    VERSION_INFO = 0x13,
+    INTEGRITY_VERIFY_INFO = 0x14,
+    DEVICE_TYPE_INFO = 0x21
+};
+
+local uint32 g_firmware_offset;
+local uint32 g_firmware_size;
+
+typedef struct {
+    uint32 source_offset <format=hex>;
+    uint32 decompressed_size <format=hex>;
+    uint32 dest_offset <format=hex>;
+} Section;
+
+void VerifySections(Section sections[])
+{
+    local uint32 number_of_sections = sizeof(sections) / sizeof(Section);
+    local uint64 section_index;
+    local uint32 previous_offset;
+    local uint32 previous_size;
+    local uint32 current_offset;
+    for (section_index = 1; section_index < number_of_sections; ++section_index)
+    {
+        previous_offset = sections[section_index - 1].source_offset;
+        previous_size = sections[section_index - 1].decompressed_size;
+        current_offset = sections[section_index].source_offset;
+        Assert(previous_offset + previous_size == current_offset, "Invalid section offset.");
+    }
+}
+
+void VerifyPadding(char buffer[], char value)
+{
+    local uint64 i = 0;
+    for(i = 0; i < sizeof(buffer); ++i)
+    {
+        Assert(buffer[i] == value);
+    }
+}
+
+typedef struct {
+    uchar checksum[32];
+} SHA2Checksum;
+
+typedef struct {
+    TLV_TYPE type <format=hex>;
+    uint16 length;
+    local string type_string;
+    switch (type)
+    {
+        case BASIC_INFO:
+            COMPRESSION_TYPE compression_type;
+            INTEGRITY_CHECK_TYPE integrity_check_type;
+            Assert(integrity_check_type == 1, "Only SHA256 integrity check is supported.");
+            uint32 firmware_offset <format=hex>;
+            uint32 firmware_size;
+            Assert(firmware_offset + firmware_size == FileSize());
+
+            g_firmware_offset = firmware_offset;
+            g_firmware_size = firmware_size;
+            type_string = "BASIC_INFO";
+            break;
+        case VERSION_INFO:
+            char version_string[length];
+
+            type_string = "VERSION_INFO";
+            break;
+        case MOVER_INFO:
+            uint32 number_of_sections;
+            Assert(length == 4 + number_of_sections * 12);
+            Section sections_table[number_of_sections] <format=hex>;
+            VerifySections(sections_table);
+
+            type_string = "MOVER_INFO";
+            break;
+        case INTEGRITY_VERIFY_INFO:
+            uint32 number_of_checksums;
+            // Checksum for the decompressed section
+            SHA2Checksum checksum[number_of_checksums];
+
+            type_string = "INTEGRITY_VERIFY_INFO";
+            break;
+        default:
+            Printf("%d\n", type);
+            Assert(false, "Unsupported TLV type.");
+    }
+} TLV <read=type_string>;
+
+typedef struct {
+    uchar file_checksum[32];
+    char padding1[224];
+    VerifyPadding(padding1, '\xFF');
+
+    local uchar calculated_checksum[32];
+    ChecksumAlgBytes(CHECKSUM_SHA256, calculated_checksum, FTell(), FileSize() - FTell());
+    Assert(!Memcmp(calculated_checksum, file_checksum, Strlen(calculated_checksum)), "Bad file checksum.");
+    
+    TLV tlv <open=true>;
+    while (ReadUShort() != 0xFFFF)
+    {
+        TLV tlv;
+    }
+
+    local uint64 number_of_bytes_til_firmware_start = g_firmware_offset - FTell();
+    char padding2[number_of_bytes_til_firmware_start];
+    VerifyPadding(padding2, '\xFF');
+    char firmware[g_firmware_size];
+} AirohaFirmware;
+
+LittleEndian();
+AirohaFirmware firmware <open=true>;
+Assert(FTell() == FileSize(), "Part of the file wasn't parsed.");
