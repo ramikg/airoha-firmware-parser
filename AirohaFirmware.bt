@@ -18,6 +18,7 @@ enum <uint16> TLV_TYPE
     MOVER_INFO = 0x12,
     VERSION_INFO = 0x13,
     INTEGRITY_VERIFY_INFO = 0x14,
+    DEVICE_NAME_INFO = 0x20,
     DEVICE_TYPE_INFO = 0x21
 };
 
@@ -96,6 +97,16 @@ typedef struct {
             SHA2Checksum checksum[number_of_checksums];
 
             type_string = "INTEGRITY_VERIFY_INFO";
+            break;
+        case DEVICE_NAME_INFO:
+            char device_name[length];
+
+            type_string = "DEVICE_NAME_INFO";
+            break;
+        case DEVICE_TYPE_INFO:
+            char device_type[length];
+
+            type_string = "DEVICE_TYPE_INFO";
             break;
         default:
             Printf("%d\n", type);
