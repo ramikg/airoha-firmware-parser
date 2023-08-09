@@ -4,7 +4,7 @@ An _010 Editor_ template for parsing the Airoha firmware format, and a Python sc
 
 Products using this firmware format include the AirReps (an AirPods clone) and numerous Sony headphones (notably WH-1000XM4 and WH-1000XM5, whose MediaTek chips are rebranded Airoha chips. Additional models may be found in [this](https://github.com/lzghzr/MDR_Proxy) repository).
 
-The only plaintext strings present in the firmware are "verion string" (Sony) and "version string" (AirReps).
+The only plaintext strings present in the firmware are "verion_string" (Sony) and "version_string" (AirReps).
 
 ## Parser usage
 
