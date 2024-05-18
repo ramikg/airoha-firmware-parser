@@ -16,18 +16,18 @@ To produce the parser I've analyzed most firmware fields by hand, until I've fou
 
 ## Decryptor usage
 
-**Note – The decryption algorithm hasn't been tested, and is simply based on the mentioned evaluation kit.**  
-An example of encrypted firmware with a known key and IV would be most helpful.
-
-To decrypt, run:
+To decrypt and decompress an Airoha firmware package, run:
 
 ```bash
+cd decryptor
 pip install -Ur requirements.txt
 
-python airoha_decrypt.py --key=0F0E0D0C0B0A09080706050403020100 --iv=63373832646334633039386336366362 --from=fw.encrypted --offset=0x1000 --to=fw.decrypted --verify-lzma
+python airoha_decrypt.py --key=000102030405060708090a0b0c0d0e0f --iv=62633636633839306334636432383763 --from=fw.encrypted --to=fw.decrypted
 ```
 
-Explanation:
+Additional flags include:
+ - `--no-decompress`: Do not decompress after decryption.  
+   Note that LZMA decompression should fail if you've provided the wrong key/IV.
+ - `--reverse-key-and-iv`: A convenience flag for reversing the bytes in the key and in the IV.
 
-- `--offset` specifies the offset in the input file where the encrypted part starts. (Optional)
-- `--verify-lzma` verifies that the decrypted file is a valid LZMA file. This is effectively equivalent to checking that the key and IV were correct. (Optional)
+For the full list, run `python airoha_decrypt.py -h`.
