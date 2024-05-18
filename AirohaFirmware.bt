@@ -19,7 +19,8 @@ enum <uint16> TLV_TYPE
     VERSION_INFO = 0x13,
     INTEGRITY_VERIFY_INFO = 0x14,
     DEVICE_NAME_INFO = 0x20,
-    DEVICE_TYPE_INFO = 0x21
+    DEVICE_TYPE_INFO = 0x21,
+    IS_NVDM_INCOMPATIBLE_FLAG = 0xF0
 };
 
 local uint32 g_firmware_offset;
@@ -107,6 +108,11 @@ typedef struct {
             char device_type[length];
 
             type_string = "DEVICE_TYPE_INFO";
+            break;
+        case IS_NVDM_INCOMPATIBLE_FLAG:
+            byte is_nvdm_incompatible;
+
+            type_string = "IS_NVDM_INCOMPATIBLE_FLAG";
             break;
         default:
             Printf("%d\n", type);
