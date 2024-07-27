@@ -28,6 +28,7 @@ python airoha_decrypt.py --key=000102030405060708090a0b0c0d0e0f --iv=62633636633
 Additional flags include:
  - `--no-decompress`: Do not decompress after decryption.  
    Note that LZMA decompression should fail if you've provided the wrong key/IV.
+ - `--no-decrypt`: Do not decrypt. (Useful for compressed non-encrypted files.)
  - `--reverse-key-and-iv`: A convenience flag for reversing the bytes in the key and in the IV.
 
 For the full list, run `python airoha_decrypt.py -h`.

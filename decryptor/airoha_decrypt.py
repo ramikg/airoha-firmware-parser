@@ -29,6 +29,8 @@ def _parse_args():
                         help=f'Offset of the encrypted part in the input file. Default is {ENCRYPTED_PART_OFFSET_STRING}.')
     parser.add_argument('--no-decompress', action='store_true',
                         help='Do not decompress the decrypted data.')
+    parser.add_argument('--no-decrypt', action='store_true',
+                        help='Do not decrypt (useful for compressed non-encrypted files).')
     parser.add_argument('--reverse-key-and-iv', action='store_false',
                         help='Reverse the bytes order in the input key and IV.')
     return parser.parse_args()
@@ -54,13 +56,14 @@ if __name__ == '__main__':
         raise AirohaDecryptInputAndOutputFilesMustBeDifferent()
 
     with args._from as encrypted_file:
-        encrypted_data = encrypted_file.read()
+        output_data = encrypted_file.read()
 
-    if args.reverse_key_and_iv:
-        args.key = args.key[::-1]
-        args.iv = args.iv[::-1]
+    if not args.no_decrypt:
+        if args.reverse_key_and_iv:
+            args.key = args.key[::-1]
+            args.iv = args.iv[::-1]
 
-    output_data = _decrypt(encrypted_data, args.key, args.iv, args.offset)
+        output_data = _decrypt(output_data, args.key, args.iv, args.offset)
     if not args.no_decompress:
         output_data = _decompress(output_data)
 
