@@ -36,8 +36,7 @@ def _parse_args():
     return parser.parse_args()
 
 
-def _decrypt(ciphertext, key, iv, offset=0):
-    ciphertext = ciphertext[offset:]
+def _decrypt(ciphertext, key, iv):
     cipher = AES.new(key, AES.MODE_CBC, iv=iv)
     # Note that decrypted data may be padded with 0xFF bytes
     return cipher.decrypt(ciphertext)
@@ -57,13 +56,15 @@ if __name__ == '__main__':
 
     with args._from as encrypted_file:
         output_data = encrypted_file.read()
+    output_data = output_data[args.offset:]
 
     if not args.no_decrypt:
         if args.reverse_key_and_iv:
             args.key = args.key[::-1]
             args.iv = args.iv[::-1]
 
-        output_data = _decrypt(output_data, args.key, args.iv, args.offset)
+        output_data = _decrypt(output_data, args.key, args.iv)
+
     if not args.no_decompress:
         output_data = _decompress(output_data)
 
